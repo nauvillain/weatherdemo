@@ -1,0 +1,40 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r agent/requirements.txt
+      - run: python -m pytest -q pipeline/tests
+      - run: python -m pytest -q tests
+        working-directory: agent
+      - run: python -m pytest -q evals
+
+  edge:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: edge } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm ci
+      - run: npm test
+      - run: npx wrangler deploy --dry-run
+
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { stack: [01-origin, 02-databricks] }
+    defaults: { run: { working-directory: "infra/${{ matrix.stack }}" } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check
+      - run: terraform init -backend=false
+      - run: terraform validate

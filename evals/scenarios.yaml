@@ -1,0 +1,96 @@
+# Failure drills. Each one breaks the system in a known way, then checks whether
+# the agent names the true cause. `expected` is the answer key; the agent never
+# sees this file, the job parameters, or the Worker's FAULT_MODE.
+#
+# inject steps:
+#   pipeline: <fault>     run the Databricks job once with that fault
+#   worker: {VAR: value}  redeploy the Worker with those variables overridden
+#   warm_edge: true       request the edge so a cached copy exists
+# settle: wait until the monitor reports one of these checks (the symptom is visible)
+# monitor: overrides for the monitor's thresholds, so drills do not take hours
+
+- id: healthy
+  title: Control case, nothing is broken
+  why: An agent that finds an incident every time is useless. This measures false alarms.
+  inject: []
+  expected: [none]
+
+- id: upstream_down
+  title: Weather API returns 503
+  why: The easy case. A failed task with a clear error message.
+  inject:
+    - pipeline: upstream_down
+  settle: [job_failed]
+  expected: [upstream_unavailable]
+
+- id: schema_drift
+  title: Upstream renames a field
+  why: The failing task (transform) is downstream of where the change entered (ingest). Tests working backward.
+  inject:
+    - pipeline: schema_drift
+  settle: [job_failed]
+  expected: [schema_drift]
+
+- id: publish_denied
+  title: Pipeline's storage credential is rejected
+  why: Same symptom as the two above (job failed) with a third cause. Tests reading the actual error.
+  inject:
+    - pipeline: publish_denied
+  settle: [job_failed]
+  expected: [publish_auth_failure]
+
+- id: wrong_path
+  title: Job succeeds but writes to the wrong folder
+  why: The hard one. Every dashboard is green and the data is quietly going stale.
+  inject:
+    - pipeline: wrong_path
+  monitor: {max_data_age_min: 8}
+  settle: [edge_stale, origin_stale]
+  settle_timeout_s: 900
+  expected: [publish_misrouted]
+
+- id: null_values
+  title: Null temperatures get published
+  why: Nothing failed and nothing is stale. Only the content is wrong.
+  inject:
+    - pipeline: null_values
+  settle: [data_quality]
+  expected: [data_quality]
+
+- id: ttl_misconfig
+  title: Edge cache lifetime set to a day
+  why: Origin is fresh, pipeline is green, users see old data. A pure CDN configuration fault.
+  inject:
+    - worker: {EDGE_TTL_SECONDS: "86400"}
+    - warm_edge: true
+    - pipeline: none
+  monitor: {behind_slack_min: 1}
+  settle: [edge_behind_origin]
+  expected: [edge_ttl_misconfig]
+
+- id: origin_auth
+  title: Edge's origin credential is rejected
+  why: The stale-fallback hides the outage from users. The agent has to notice the edge is coasting.
+  inject:
+    - warm_edge: true
+    - worker: {FAULT_MODE: origin_auth}
+  settle: [edge_serving_stale_fallback, edge_http_error]
+  settle_timeout_s: 420
+  expected: [origin_auth]
+
+- id: worker_error
+  title: A deploy breaks the per-city route
+  why: Partial outage. The index works, city pages return 500, and the pipeline is innocent.
+  inject:
+    - worker: {FAULT_MODE: error_500}
+  settle: [edge_http_error]
+  expected: [edge_code_error]
+
+- id: double_fault
+  title: Schema drift and a broken Worker route at once
+  why: Real incidents overlap. Tests whether the agent stops at the first cause it finds.
+  inject:
+    - pipeline: schema_drift
+    - worker: {FAULT_MODE: error_500}
+  settle: [edge_http_error]
+  expected: [schema_drift, edge_code_error]

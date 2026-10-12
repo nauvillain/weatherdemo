@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "weather-edge",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+
+  // A custom domain makes Cloudflare create the DNS record and certificate
+  // for this hostname. It does not touch the other records on vilnico.com.
+  // It will refuse to deploy if weather.vilnico.com already has a record.
+  "routes": [{ "pattern": "weather.vilnico.com", "custom_domain": true }],
+  "workers_dev": false,
+
+  "observability": { "enabled": true },
+
+  "vars": {
+    // Replace with: terraform -chdir=infra/01-origin output -raw container_url
+    "ORIGIN_BASE": "https://REPLACE_ME.blob.core.windows.net/weather",
+    "EDGE_TTL_SECONDS": "120",
+    "STALE_MAX_SECONDS": "86400",
+    "FAULT_MODE": "none"
+  }
+  // Secret, set once with: npx wrangler secret put ORIGIN_SAS
+  //   (value: terraform -chdir=infra/01-origin output -raw read_sas)
+}

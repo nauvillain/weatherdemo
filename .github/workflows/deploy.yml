@@ -1,0 +1,33 @@
+name: deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["edge/**", "pipeline/**"]
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: edge } }
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm ci
+      - run: npm test
+      - run: npx wrangler deploy
+
+  pipeline:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: pipeline } }
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+      - run: databricks bundle validate --var="catalog=${{ vars.WEATHER_CATALOG }}"
+      - run: databricks bundle deploy --var="catalog=${{ vars.WEATHER_CATALOG }}"

@@ -1,0 +1,47 @@
+resources:
+  schemas:
+    weather:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: weather-edge lab tables
+
+  jobs:
+    weather_publish:
+      name: weather-edge-publish
+      max_concurrent_runs: 1
+      timeout_seconds: 1200
+
+      # No cluster block: tasks run on serverless compute, so there are no
+      # VMs to size, forget, or pay for while idle.
+      parameters:
+        - name: fault          # drill switch; "none" in normal operation
+          default: none
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+
+      # Paused on purpose. Trigger runs by hand while building; unpause only
+      # when you want to watch a real schedule (and its bill) for a day.
+      schedule:
+        quartz_cron_expression: "0 7 * * * ?"
+        timezone_id: UTC
+        pause_status: PAUSED
+
+      tasks:
+        - task_key: ingest
+          max_retries: 0   # a production job would retry; drills want the first failure visible
+          notebook_task:
+            notebook_path: ../src/ingest.py
+        - task_key: transform
+          depends_on:
+            - task_key: ingest
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../src/transform.py
+        - task_key: publish
+          depends_on:
+            - task_key: transform
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../src/publish.py

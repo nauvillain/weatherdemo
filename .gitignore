@@ -1,0 +1,12 @@
+.env
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+node_modules/
+.wrangler/
+__pycache__/
+.pytest_cache/
+.venv/
+agent/reports/
+.databricks/

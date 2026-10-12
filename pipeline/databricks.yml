@@ -1,0 +1,19 @@
+# Databricks bundle: the job is code, deployed with `databricks bundle deploy`.
+# Auth comes from the environment (DATABRICKS_HOST + a CLI profile or token).
+bundle:
+  name: weather-edge
+
+variables:
+  catalog:
+    description: Unity Catalog catalog to write to. New Azure workspaces create one named after the workspace.
+    default: main
+  schema:
+    description: Schema holding the bronze/silver/ops tables.
+    default: weather
+
+include:
+  - resources/*.yml
+
+targets:
+  lab:
+    default: true

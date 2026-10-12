@@ -1,0 +1,5 @@
+anthropic>=0.40
+databricks-sdk>=0.40
+requests>=2.31
+pyyaml>=6.0
+pytest>=8.0
