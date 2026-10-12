@@ -17,6 +17,12 @@ terraform {
 provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
+
+  # By default the provider registers dozens of Azure resource providers on
+  # startup, which can take 10+ minutes on a new subscription with no output.
+  # Register only what this stack uses.
+  resource_provider_registrations = "none"
+  resource_providers_to_register  = ["Microsoft.Databricks", "Microsoft.Storage", "Microsoft.Network", "Microsoft.Compute"]
 }
 
 variable "subscription_id" {
