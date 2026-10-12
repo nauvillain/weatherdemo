@@ -25,8 +25,18 @@ need curl "sudo apt install curl"
 python3 -c "import venv, ensurepip" 2>/dev/null || { echo "Missing Python venv support. Install it with: sudo apt install python3-venv"; exit 1; }
 
 step "1/6 Azure login"
-az account show >/dev/null 2>&1 || az login
-SUB_ID="$(az account show --query id -o tsv)"
+az account show >/dev/null 2>&1 || az login || true
+if ! SUB_ID="$(az account show --query id -o tsv 2>/dev/null)"; then
+  cat <<'EOF'
+You are signed in, but this account has no Azure subscription.
+Create a pay-as-you-go subscription at https://azure.microsoft.com/pricing/purchase-options/pay-as-you-go
+(a Free Trial subscription will not work for the Databricks trial), then run:
+  az login
+  bash scripts/phase-a.sh
+If you already have a subscription in another directory, use: az login --tenant <directory id>
+EOF
+  exit 1
+fi
 echo "Subscription: $(az account show --query name -o tsv) ($SUB_ID)"
 read -r -p "Create the resources in this subscription? [Y/n] " answer
 if [[ ! "${answer:-Y}" =~ ^[Yy]$ ]]; then
