@@ -20,12 +20,12 @@ PUBLISH_PREFIX = "v1/"
 FAULTS = ("none", "upstream_down", "schema_drift", "null_values", "wrong_path", "publish_denied")
 
 LOCATIONS = [
-    {"id": "state-college", "name": "State College, PA", "lat": 40.79, "lon": -77.86},
-    {"id": "new-york", "name": "New York, NY", "lat": 40.71, "lon": -74.01},
-    {"id": "chicago", "name": "Chicago, IL", "lat": 41.88, "lon": -87.63},
-    {"id": "denver", "name": "Denver, CO", "lat": 39.74, "lon": -104.99},
-    {"id": "seattle", "name": "Seattle, WA", "lat": 47.61, "lon": -122.33},
-    {"id": "miami", "name": "Miami, FL", "lat": 25.76, "lon": -80.19},
+    {"id": "state-college", "name": "State College, PA, USA", "lat": 40.79, "lon": -77.86},
+    {"id": "taipei", "name": "Taipei, Taiwan", "lat": 25.03, "lon": 121.57},
+    {"id": "paris", "name": "Paris, France", "lat": 48.86, "lon": 2.35},
+    {"id": "morzine", "name": "Morzine, France", "lat": 46.18, "lon": 6.71},
+    {"id": "tokyo", "name": "Tokyo, Japan", "lat": 35.68, "lon": 139.69},
+    {"id": "new-york", "name": "New York City, NY, USA", "lat": 40.71, "lon": -74.01},
 ]
 _BY_ID = {loc["id"]: loc for loc in LOCATIONS}
 

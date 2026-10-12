@@ -62,7 +62,7 @@ def test_documents_and_upload():
     assert len(docs) == 7
     index = docs["v1/index.json"]
     assert index["generated_at"] == "2026-10-09T17:00:00Z" and index["count"] == 6
-    assert docs["v1/current/chicago.json"]["location"]["name"] == "Chicago, IL"
+    assert docs["v1/current/morzine.json"]["location"]["name"] == "Morzine, France"
 
     puts = []
 

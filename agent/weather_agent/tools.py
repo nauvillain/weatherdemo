@@ -60,7 +60,7 @@ class ToolRegistry:
 
 
 _PATH = {"type": "string",
-         "description": "Path such as /v1/index.json or /v1/current/chicago.json"}
+         "description": "Path such as /v1/index.json or /v1/current/paris.json"}
 
 
 def build_registry(cfg, dbx=None, cf=None, *, allow_actions: bool = False) -> ToolRegistry:
