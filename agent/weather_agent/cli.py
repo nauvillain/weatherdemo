@@ -66,7 +66,11 @@ def run_investigation(cfg: Config, findings: list[dict], *, dbx=None, cf=None, f
     if client is None:
         import anthropic
 
-        client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+        # Reads ANTHROPIC_API_KEY. An organization-level key (not tied to a workspace)
+        # also needs the workspace ID on every request.
+        workspace = os.environ.get("ANTHROPIC_WORKSPACE_ID")
+        client = anthropic.Anthropic(
+            default_headers={"anthropic-workspace-id": workspace} if workspace else None)
     registry = build_registry(cfg, dbx, cf, allow_actions=allow_actions)
     return run_agent(client, cfg.model, registry, findings, forced=forced,
                      approve=ask_operator if allow_actions else deny_all,
