@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import replace
 
@@ -96,6 +97,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2 if findings else 0
     if not findings and not args.force:
         return 0
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("\nThe monitor ran, but the agent needs an Anthropic API key.\n"
+              "Create one at https://console.anthropic.com/settings/keys and add it to "
+              "agent/.env as ANTHROPIC_API_KEY=...")
+        return 1
 
     result = run_investigation(cfg, findings, dbx=dbx, cf=cf, forced=args.force,
                                allow_actions=args.allow_actions)
